@@ -1,0 +1,73 @@
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Entornos virtuales
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos de configuración sensibles
+# NOTA: .env se incluye en la imagen para Docker
+# .env.local
+# .env.production
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentación
+README.md
+*.md
+
+# Logs
+*.log
+
+# Base de datos local
+*.db
+*.sqlite
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de build específicos
+app.spec
+Procfile

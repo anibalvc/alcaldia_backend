@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL
+  mysql_db:
+    image: mysql:8.0
+    container_name: bienes_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts:/docker-entrypoint-initdb.d
+    networks:
+      - bienes_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Backend FastAPI
+  backend:
+    build: .
+    container_name: bienes_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - BACKEND_HOST=${BACKEND_HOST}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      # MinIO Configuration - Usar variables de .env
+      - USE_S3_STORAGE=${USE_S3_STORAGE}
+      - MINIO_HOST=${MINIO_HOST}
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_DEFAULT_BUCKETS=${MINIO_DEFAULT_BUCKETS}
+      - S3_REGION=${S3_REGION}
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+      # bienes_minio:  # Comentado: solo si usas MinIO local
+      #   condition: service_healthy
+    networks:
+      - bienes_network
+    volumes:
+      - .:/app
+    command: python app.py
+
+  # Adminer - Alternativa ligera a phpMyAdmin
+  adminer:
+    image: adminer:latest
+    container_name: bienes_adminer
+    restart: always
+    ports:
+      - "8091:8080"
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    networks:
+      - bienes_network
+
+# Volumenes para persistencia de datos
+volumes:
+  mysql_data:
+  minio_data:
+
+# Red personalizada
+networks:
+  bienes_network:
+    driver: bridge

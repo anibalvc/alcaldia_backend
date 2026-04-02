@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Backend FastAPI
+  backend:
+    build: .
+    container_name: bienes_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Variables desde el .env de Portainer
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - BACKEND_HOST=${BACKEND_HOST}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - USE_S3_STORAGE=${USE_S3_STORAGE}
+      - MINIO_HOST=${MINIO_HOST}
+      - MINIO_PORT=${MINIO_PORT}
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_DEFAULT_BUCKETS=${MINIO_DEFAULT_BUCKETS}
+      - S3_REGION=${S3_REGION}
+    networks:
+      - bienes_network
+    volumes:
+      - ./:/app
+    command: python app.py
+
+  # Adminer - Interfaz web para gestionar MariaDB
+  adminer:
+    image: adminer:latest
+    container_name: bienes_adminer
+    restart: unless-stopped
+    ports:
+      - "8091:8080"
+    networks:
+      - bienes_network
+
+# Red del backend (se conectará a la red del MariaDB mediante Portainer)
+networks:
+  bienes_network:
+    driver: bridge
