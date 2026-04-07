@@ -345,7 +345,7 @@ def delete_mueble(id: int, eliminado_por: str, num_oficio: int, concepto_desinco
             registro_id=id,
             datos=datos_mueble,
             num_oficio=num_oficio,
-            descripcion=f"Se desincorporó el mueble '{mueble.descripcion}' con número de bien {mueble.num_bien} mediante oficio 
+            descripcion=f"Se desincorporó el mueble '{mueble.descripcion}' con número de bien {mueble.num_bien} mediante oficio #{num_oficio}",
             request=request
         )
         

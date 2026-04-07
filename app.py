@@ -15,7 +15,6 @@ from routes.solicitudes_muebles import solicitudes_muebles
 from routes.solicitudes_desincorporar_muebles import solicitudes_desincorporar_muebles
 from routes.logs import logs_router
 from routes.bien_archivo import archivo_router
-from routes.bien_archivo_s3 import archivo_s3_router
 from routes.static_files import static_router, configure_static_files
 from routes.reporte_bm4 import reporte_bm4
 from routes.reportes import reportes
@@ -56,7 +55,6 @@ app.include_router(solicitudes_muebles)
 app.include_router(solicitudes_desincorporar_muebles)
 app.include_router(logs_router)
 app.include_router(archivo_router, prefix="/api/v1")
-app.include_router(archivo_s3_router, prefix="/api/v1/s3")
 app.include_router(static_router, prefix="/api/v1")
 app.include_router(reporte_bm4, prefix="/api/v1")
 app.include_router(reportes, prefix="/api/v1")

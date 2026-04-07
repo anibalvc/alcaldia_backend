@@ -303,7 +303,7 @@ def delete_Automovil(id: int, eliminado_por: str, num_oficio: int, concepto_desi
             registro_id=id,
             datos=datos_automovil,
             num_oficio=num_oficio,
-            descripcion=f"Se desincorporó el automóvil {automovil.marca} con placa {automovil.placa} y número de bien {automovil.num_bien} mediante oficio 
+            descripcion=f"Se desincorporó el automóvil {automovil.marca} con placa {automovil.placa} y número de bien {automovil.num_bien} mediante oficio #{num_oficio}",
             request=request
         )
         

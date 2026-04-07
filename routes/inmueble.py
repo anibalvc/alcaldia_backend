@@ -224,7 +224,7 @@ def delete_Inmueble(id: int, eliminado_por: str, num_oficio: int, concepto_desin
             registro_id=id,
             datos=datos_inmueble,
             num_oficio=num_oficio,
-            descripcion=f"Se desincorporó el inmueble '{inmueble.nombre}' con número de bien {inmueble.num_bien} mediante oficio 
+            descripcion=f"Se desincorporó el inmueble '{inmueble.nombre}' con número de bien {inmueble.num_bien} mediante oficio #{num_oficio}",
             request=request
         )
         
