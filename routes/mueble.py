@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Response, Request, UploadFile, File, Form
 from config.db import conn, engine
 from models.mueble import muebles, mueblesDeleted, mueblesTecnologia
+from models.departamento import departamentos
 from schemas.mueble import ErrorResponse, Mueble, MuebleData, MuebleDelete, MuebleDeleteData, MueblePOSTResponse, MuebleUpdate, ImportMuebleResultado
 from starlette.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 from fastapi.responses import JSONResponse
@@ -35,7 +36,7 @@ def get_muebles(
 ):
     
     try:
-        
+                                                                      
         conn.rollback()
     except:
         pass
@@ -75,7 +76,7 @@ def get_mueblesdeleted(
     fechaDesde: str | None = None,
     fechaHasta: str | None = None
 ):
-
+    
     conn.commit()
 
     conn.execution_options(stream_results=True)
@@ -105,7 +106,7 @@ def get_mueblesdeleted(
 
 @mueble.post("/mueble/create", tags=["Mueble"], response_model=Mueble)
 def create_mueble(mueble: Mueble, request: Request):
-
+    
     conn.commit()
 
     conn.execution_options(stream_results=True)
@@ -144,7 +145,7 @@ def create_mueble(mueble: Mueble, request: Request):
             tabla_obj = muebles
         
         conn.commit()
-
+        
         nuevo_id = result.inserted_primary_key[0]
         AuditLogger.log_create(
             usuario=mueble.ingresado_por,
@@ -154,7 +155,7 @@ def create_mueble(mueble: Mueble, request: Request):
             descripcion=f"Se creó el mueble '{mueble.descripcion}' con número de bien {mueble.num_bien} en {tabla_nombre}",
             request=request
         )
-
+        
         inserted_mueble = conn.execute(tabla_obj.select().where(tabla_obj.c.id == nuevo_id)).first()
         return inserted_mueble
     except SQLAlchemyError as e:
@@ -163,19 +164,19 @@ def create_mueble(mueble: Mueble, request: Request):
 
 @mueble.put("/mueble/{id}", tags=["Mueble"], response_model=MueblePOSTResponse)
 def update_mueble(id: int, mueble: MuebleUpdate, request: Request, usuario: str):
-
+    
     conn.commit()
 
     conn.execution_options(stream_results=True)
     responseTrue = {"data": True}
     responseFalse = {"data": False}
-
+    
     mueble_anterior = conn.execute(muebles.select().where(muebles.c.id == id)).first()
     if mueble_anterior is None:
         return Response(status_code=HTTP_404_NOT_FOUND, content=JSONEncoder(sort_keys=True).encode(responseFalse), media_type="application/json")
     
     datos_anteriores = dict(mueble_anterior._mapping)
-
+    
     update_values = {}
     
     if mueble.orden_pago is not None:
@@ -208,7 +209,7 @@ def update_mueble(id: int, mueble: MuebleUpdate, request: Request, usuario: str)
         update_values['num_bien'] = mueble.num_bien
     if mueble.departamento is not None:
         update_values['departamento'] = mueble.departamento
-
+    
     if not update_values:
         return JSONResponse(status_code=400, content={"message": "No se enviaron campos para actualizar"}, media_type="application/json")
     
@@ -216,11 +217,11 @@ def update_mueble(id: int, mueble: MuebleUpdate, request: Request, usuario: str)
     conn.commit()
     if result.rowcount == 0:
         return Response(status_code=HTTP_404_NOT_FOUND, content=JSONEncoder(sort_keys=True).encode(responseFalse), media_type="application/json")
-
+    
     datos_nuevos = {}
     for key, value in update_values.items():
         datos_nuevos[key] = str(value) if value is not None else value
-
+    
     campos_cambiados = ", ".join(update_values.keys())
     num_bien_desc = update_values.get('num_bien', datos_anteriores.get('num_bien', 'N/A'))
     
@@ -238,13 +239,13 @@ def update_mueble(id: int, mueble: MuebleUpdate, request: Request, usuario: str)
 
 @mueble.get("/mueble/subirData", tags=["Mueble"], response_model=ErrorResponse)
 def cargar_datos_excel():
-    
+                                                     
     conn.commit()
 
     conn.execution_options(stream_results=True)
     
     try:
-        
+                               
         ruta_excel = "C:/carga/muebles.xlsx"
         data = pd.read_excel(ruta_excel)
         tabla_destino = "muebles"
@@ -258,22 +259,22 @@ def cargar_datos_excel():
 
         columnas_tabla = [col.name for col in tabla.columns]
         print(data.columns)
-
+        
         if 'id' not in data.columns:
-            data['id'] = None  
+            data['id'] = None                                                  
         if 'partida_compra' not in data.columns:
-            data['partida_compra'] = None  
+            data['partida_compra'] = None                      
         if 'num_factura' not in data.columns:
-            data['num_factura'] = None  
+            data['num_factura'] = None                      
         if 'esTecnologia' not in data.columns:
-            data['esTecnologia'] = 0  
+            data['esTecnologia'] = 0                           
         if 'ingresado_por' not in data.columns:
-            data['ingresado_por'] = "usuario_fijo"  
-
+            data['ingresado_por'] = "usuario_fijo"                
+        
         if 'fecha_compra' in data.columns:
             data['fecha_compra'] = data['fecha_compra'].str.replace('-', '_', regex=False)
             
-        data = data[columnas_tabla]  
+        data = data[columnas_tabla]                                            
 
         data.to_sql(tabla.name, con=conn, if_exists="append", index=False)
         return {"success": True, "message": f"Datos cargados exitosamente en la tabla {tabla_destino}."}
@@ -289,7 +290,7 @@ def cargar_datos_excel():
 
 @mueble.delete("/mueble/{id}", tags=["Mueble"], response_model=MueblePOSTResponse)
 def delete_mueble(id: int, eliminado_por: str, num_oficio: int, concepto_desincorporacion: str, request: Request):
-
+    
     conn.commit()
 
     conn.execution_options(stream_results=True)
@@ -337,7 +338,7 @@ def delete_mueble(id: int, eliminado_por: str, num_oficio: int, concepto_desinco
         if result.rowcount == 0:
             conn.commit()
             return Response(status_code=HTTP_404_NOT_FOUND, content=JSONEncoder(sort_keys=True).encode(responseFalse), media_type="application/json")
-
+        
         datos_mueble = dict(mueble._mapping)
         AuditLogger.log_desincorporar(
             usuario=eliminado_por,
@@ -358,10 +359,11 @@ def delete_mueble(id: int, eliminado_por: str, num_oficio: int, concepto_desinco
 async def importar_muebles_desde_csv(
     file: UploadFile = File(...),
     ingresado_por: str = Form(...),
+    departamento_id: int = Form(...),
     esTecnologia: int = Form(default=0),
     request: Request = None
 ):
-
+       
     if not file.filename.endswith('.csv'):
         return JSONResponse(status_code=400, content={"message": "El archivo debe ser un CSV"})
 
@@ -375,22 +377,30 @@ async def importar_muebles_desde_csv(
         except UnicodeDecodeError:
             decoded = contents.decode('cp1252')
 
+    with engine.connect() as dev_conn:
+        dept = dev_conn.execute(
+            departamentos.select().where(departamentos.c.id == departamento_id)
+        ).first()
+        if not dept:
+            return JSONResponse(status_code=400, content={"message": f"Departamento con ID {departamento_id} no encontrado"})
+        nombre_departamento = dept.nombre
+
     csv_reader = csv.reader(io.StringIO(decoded), delimiter=';')
 
     total_procesados = 0
     errores = []
     muebles_a_crear = []
-    num_bienes_en_csv = set()  
+    num_bienes_en_csv = set()                                           
 
     now = f"{datetime.now().day}/{datetime.now().month}/{datetime.now().year}"
 
     next(csv_reader, None)
 
-    for row_num, row in enumerate(csv_reader, start=2):  
+    for row_num, row in enumerate(csv_reader, start=2):                                       
         total_procesados += 1
 
         try:
-            
+                                                            
             if len(row) < 14:
                 errores.append({
                     "fila": row_num,
@@ -404,14 +414,14 @@ async def importar_muebles_desde_csv(
             descripcion = row[2].strip() if row[2] else None
             orden_compra = row[4].strip() if row[4] else "0"
             fecha_compra = row[5].strip() if row[5] else ""
-            
+                                                                                    
             marca = row[7].strip() if row[7] else ""
             modelo = row[8].strip() if row[8] else ""
-            ubicacion = row[9].strip() if row[9] else None
-            serial = row[10].strip() if row[10] else ""
-            responsable = row[11].strip() if row[11] else ""
-            valor = row[12].strip() if row[12] else None
-            estado = row[13].strip() if row[13] else ""
+            ubicacion = nombre_departamento                                                      
+            serial = row[10].strip() if len(row) > 10 and row[10] else ""
+            responsable = row[11].strip() if len(row) > 11 and row[11] else ""
+            valor = row[12].strip() if len(row) > 12 and row[12] else None
+            estado = row[13].strip() if len(row) > 13 and row[13] else ""
 
             if not codigo:
                 errores.append({
@@ -461,12 +471,12 @@ async def importar_muebles_desde_csv(
                 orden_pago = 0
 
             try:
-                
+                                                       
                 valor_limpio = valor.replace('"', '').strip()
-                
+                                                        
                 if '.' in valor_limpio and ',' in valor_limpio:
                     valor_limpio = valor_limpio.replace('.', '').replace(',', '.')
-                
+                                            
                 elif ',' in valor_limpio:
                     valor_limpio = valor_limpio.replace(',', '.')
                 monto = Decimal(valor_limpio) if valor_limpio else Decimal('0.00')
@@ -507,10 +517,10 @@ async def importar_muebles_desde_csv(
                 "num_bien": num_bien,
                 "descripcion": descripcion,
                 "orden_pago": orden_pago,
-                "partida_compra": 0,  
-                "num_factura": 0,     
+                "partida_compra": 0,                      
+                "num_factura": 0,                         
                 "fecha_compra": fecha_compra if fecha_compra else "",
-                "fecha_ingreso": now,  
+                "fecha_ingreso": now,                            
                 "marca": marca,
                 "modelo": modelo,
                 "serial": serial,
@@ -518,8 +528,9 @@ async def importar_muebles_desde_csv(
                 "departamento": ubicacion,
                 "valor_inicial": monto,
                 "valor_actual": monto,
-                "estado": estado if estado else "D",  
+                "estado": estado if estado else "D",                           
                 "esTecnologia": esTecnologia,
+                "concepto_incorporacion": "1",                      
                 "ingresado_por": ingresado_por
             })
 
@@ -543,12 +554,12 @@ async def importar_muebles_desde_csv(
     muebles_creados = []
 
     with engine.connect() as connection:
-        
+                                       
         trans = connection.begin()
 
         try:
             for mueble_data in muebles_a_crear:
-                fila = mueble_data.pop("fila")  
+                fila = mueble_data.pop("fila")                          
 
                 result = connection.execute(muebles.insert().values(mueble_data))
                 nuevo_id = result.lastrowid
@@ -574,7 +585,7 @@ async def importar_muebles_desde_csv(
             )
 
         except Exception as e:
-            
+                                                                                   
             trans.rollback()
             return JSONResponse(
                 status_code=500,
@@ -596,39 +607,39 @@ def traspaso_mueble(
     archivo: UploadFile = File(...),
     request: Request = None
 ):
-
+       
     conn.commit()
     
     try:
-        
+                                       
         mueble_original = conn.execute(muebles.select().where(muebles.c.id == id_bien)).first()
         
         if not mueble_original:
             return JSONResponse(status_code=404, content={"message": "Mueble no encontrado"}, media_type="application/json")
             
         mueble_dict = dict(mueble_original._mapping)
-
+        
         delete_data = mueble_dict.copy()
-        if 'id' in delete_data: delete_data.pop('id') 
+        if 'id' in delete_data: delete_data.pop('id')                                            
         delete_data['num_oficio'] = num_oficio
         delete_data['concepto_desincorporacion'] = '51' 
         delete_data['eliminado_por'] = eliminado_por
         
         conn.execute(mueblesDeleted.insert().values(delete_data))
-
+        
         conn.execute(muebles.delete().where(muebles.c.id == id_bien))
-
+        
         new_mueble_data = mueble_dict.copy()
-        if 'id' in new_mueble_data: new_mueble_data.pop('id') 
+        if 'id' in new_mueble_data: new_mueble_data.pop('id')                   
         new_mueble_data['departamento'] = nuevo_departamento
         new_mueble_data['concepto_incorporacion'] = '02'
         new_mueble_data['fecha_ingreso'] = datetime.now().strftime("%d/%m/%Y") 
         
         result_insert = conn.execute(muebles.insert().values(new_mueble_data))
         nuevo_id_bien = result_insert.lastrowid
-
+        
         try:
-            
+                                       
             file_info = file_handler.save_file(
                 file=archivo,
                 bien_id=nuevo_id_bien,
@@ -636,7 +647,7 @@ def traspaso_mueble(
                 bien_tipo='mueble',
                 subido_por=eliminado_por 
             )
-
+            
             conn.execute(bien_archivos.insert().values(
                 bien_id=nuevo_id_bien,
                 numero_bien=str(new_mueble_data['num_bien']),
@@ -656,11 +667,11 @@ def traspaso_mueble(
             ))
             
         except Exception as e:
-            
+                                                                               
             if 'file_info' in locals():
                 file_handler.delete_file(file_info['ruta_archivo'])
             raise e 
-
+            
         AuditLogger.log_create(
             usuario=eliminado_por,
             modulo="MUEBLE",
@@ -693,11 +704,11 @@ def reincorporar_mueble(
     usuario_accion: str = Form(...),
     request: Request = None
 ):
-    
+       
     conn.commit()
     
     try:
-        
+                                
         mueble_deleted = conn.execute(
             mueblesDeleted.select().where(mueblesDeleted.c.id == id_historial)
         ).first()
@@ -706,25 +717,25 @@ def reincorporar_mueble(
             return JSONResponse(status_code=404, content={"message": "Registro histórico no encontrado"}, media_type="application/json")
 
         datos_deleted = dict(mueble_deleted._mapping)
-
+        
         nuevo_mueble = datos_deleted.copy()
-
+        
         campos_a_eliminar = ['id', 'fecha_eliminacion', 'eliminado_por', 'concepto_desincorporacion', 'num_oficio_eliminacion']
         for campo in campos_a_eliminar:
             if campo in nuevo_mueble:
                 del nuevo_mueble[campo]
-
+        
         nuevo_mueble['fecha_ingreso'] = datetime.now().strftime("%d/%m/%Y")
         nuevo_mueble['concepto_incorporacion'] = concepto_incorporacion
         nuevo_mueble['ingresado_por'] = usuario_accion
-
+        
         if nuevo_departamento:
             nuevo_mueble['departamento'] = nuevo_departamento
-
+            
         try:
             result = conn.execute(muebles.insert().values(nuevo_mueble))
             nuevo_id = result.lastrowid
-
+            
             AuditLogger.log_create(
                 usuario=usuario_accion,
                 modulo="MUEBLE",
