@@ -256,6 +256,24 @@ def delete_Automovil(id: int, eliminado_por: str, num_oficio: int, concepto_desi
 
     if automovil == None:
         return JSONResponse(status_code=400, content={"message": "No se encontro el Automovil"}, media_type="application/json")
+        
+    if concepto_desincorporacion in ["56", "57"]:
+        archivos = conn.execute(
+            bien_archivos.select().where(
+                and_(
+                    bien_archivos.c.bien_id == id,
+                    bien_archivos.c.bien_tipo == "AUTOMOVIL",
+                    bien_archivos.c.activo == True
+                )
+            )
+        ).fetchall()
+        
+        if not archivos or len(archivos) == 0:
+            return JSONResponse(
+                status_code=400, 
+                content={"message": "Debe adjuntar al menos un archivo o fotografía como evidencia para proceder con la desincorporación por este concepto."},
+                media_type="application/json"
+            )
 
     delete_Automovil = {"num_bien": automovil.num_bien, "modelo": automovil.descripcion,
                         "partida_compra": automovil.partida_compra,

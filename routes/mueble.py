@@ -304,6 +304,24 @@ def delete_mueble(id: int, eliminado_por: str, num_oficio: int, concepto_desinco
     if mueble is None:
         return JSONResponse(status_code=400, content={"message": "No se encontro el Mueble"}, media_type="application/json")
 
+    if concepto_desincorporacion in ["56", "57"]:
+        archivos = conn.execute(
+            bien_archivos.select().where(
+                and_(
+                    bien_archivos.c.bien_id == id,
+                    bien_archivos.c.bien_tipo == "MUEBLE",
+                    bien_archivos.c.activo == True
+                )
+            )
+        ).fetchall()
+        
+        if not archivos or len(archivos) == 0:
+            return JSONResponse(
+                status_code=400, 
+                content={"message": "Debe adjuntar al menos un archivo o fotografía como evidencia para proceder con la desincorporación por este concepto."},
+                media_type="application/json"
+            )
+
     delete_mueble = {"num_bien": mueble.num_bien, "descripcion": mueble.descripcion,
                      "partida_compra": mueble.partida_compra,
                      "fecha_ingreso": mueble.fecha_ingreso,

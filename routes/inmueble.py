@@ -188,6 +188,24 @@ def delete_Inmueble(id: int, eliminado_por: str, num_oficio: int, concepto_desin
     if inmueble is None:
         return JSONResponse(status_code=400, content={"message": "No se encontro el Inmueble"}, media_type="application/json")
 
+    if concepto_desincorporacion in ["56", "57"]:
+        archivos = conn.execute(
+            bien_archivos.select().where(
+                and_(
+                    bien_archivos.c.bien_id == id,
+                    bien_archivos.c.bien_tipo == "INMUEBLE",
+                    bien_archivos.c.activo == True
+                )
+            )
+        ).fetchall()
+        
+        if not archivos or len(archivos) == 0:
+            return JSONResponse(
+                status_code=400, 
+                content={"message": "Debe adjuntar al menos un archivo o fotografía como evidencia para proceder con la desincorporación por este concepto."},
+                media_type="application/json"
+            )
+
     delete_Inmueble = {"num_bien": inmueble.num_bien, "descripcion": inmueble.descripcion,
                        "partida_compra": inmueble.partida_compra,
                        "fecha_ingreso": inmueble.fecha_ingreso,
